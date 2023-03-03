@@ -9,6 +9,7 @@ from .methods import *
 #requests_cache, used for caching requests. Will be replaced later but it works for now
 cache.install_cache()
 
+driver_limit = 857
 
 class APIRequester:
 
@@ -47,13 +48,13 @@ class APIRequester:
 	def reset_variables(self):
 		"""
 		Used to reset variables, should call it in between every seperate use
-		Call automatically everytime get_STATISTIC() is called
+		Called everytime get_STATISTIC() is called
 		"""
 		self.raceNames = None
 		self.reqJSON = None
 
 	def reset_params(self):
-		self.crtieria = None
+		self.criteria = None
 		self.params = {
 			"race": {
 				"season":		None,
@@ -106,6 +107,9 @@ class APIRequester:
 		self.params["qualifiers"]["laps"] = lapN
 		return self
 
+	def limit(self, L : int):
+		self.params["limits"]["limit"] = L
+
 	def get_laps(self):
 		"""
 		Returns a dictionary in the format of {driverid:[laptime1, laptime2, ..., ]}
@@ -115,7 +119,8 @@ class APIRequester:
 
 		self.criteria = "laps"
 		
-		self.params["limits"]["limit"] = 87 #
+		if self.params["limits"]["limit"] == None:
+			self.limit(87) #
 
 		self.reqJSON = self.run_request()
 
@@ -166,7 +171,8 @@ class APIRequester:
 		self.reset_variables()
 
 		self.criteria = "drivers"
-		self.params["limits"]["limit"] = 34 #
+		if self.params["limits"]["limit"] == None:
+			self.limit(34) #
 
 		self.reqJSON = self.run_request()
 
@@ -179,7 +185,57 @@ class APIRequester:
 		self.reset_params()
 		return driverData
 
+	def get_qualifying(self):
+		"""
+		Returns qualifying results, in the format of {'driverId': {'Q1' : time}}
+		Results are not full for years before 2003, but an alternative will be added in the future. 
 
+		"""
+
+		self.reset_variables()
+		self.criteria = "qualifying"
+
+		if self.params["limits"]["limit"] == None:
+			self.limit(20)
+
+		self.reqJSON = self.run_request()
+
+		qualifyingData = {}
+
+		for qualiN, quali in enumerate(self.reqJSON["MRData"]["RaceTable"]["Races"]):
+			qualifyingTimes = {}
+
+			for driver in quali["QualifyingResults"]:
+				qualifyingTimes[driver["Driver"]["driverId"]] = {}
+				for qSession in ["Q1", "Q2", "Q3"]:
+	
+					if qSession in driver:
+						qualifyingTimes[driver["Driver"]["driverId"]][qSession] = get_sec(driver[qSession])
+		
+			qualifyingData[qualiN] = qualifyingTimes
+
+
+		self.reset_params()
+		return qualifyingData
+
+	def search_id(self, name):
+		"""
+		regex search of all drivers.
+		This should be cached and since all drivers are cached, any successive calls don't need to make any requests to Ergast 
+		Searches all drivers to find the corresponding driver ID based on their name. For example, passing in "Schumacher" will return Michael, Ralf, and Mick Schumacher and their id's 
+		as a dictionary {'driverId':'givenName familyName'}.
+		"""
+		self.reset_variables()
+
+		self.limit(driver_limit)
+		drivers = self.get_drivers()
+
+		driverStrings = ["{} {} {}".format(driver["driverId"], driver["givenName"], driver["familyName"]) for driver in drivers.values()]
+		possibleMatches = [idName for idName, match in [(searchString.split(" ", 1), re.search(name, searchString, re.IGNORECASE)) for searchString in driverStrings] if match is not None ]
+		
+
+		self.reset_params()
+		return dict(possibleMatches)
 
 	def run_request(self):
 		reqURL = self.create_url(self.params, self.criteria)
