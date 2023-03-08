@@ -1,7 +1,7 @@
 import json
 import requests as req
 import requests_cache as cache
-import numpy as np
+
 import re
 
 from .methods import *
@@ -126,14 +126,13 @@ class APIRequester:
 
 		if len(self.reqJSON["MRData"]["RaceTable"]["Races"]) == 0:
 			print("Error in getting laps.")
-			return np.array([])
+			return []
 
 
 		lapTimeData = {}
 		raceNames = []
 
 		for raceN,race in enumerate(self.reqJSON["MRData"]["RaceTable"]["Races"]):
-			print("here", raceN)
 			raceLaps = {}
 			for driver in race["Laps"][0]["Timings"]:
 				raceLaps[driver["driverId"]] = []
@@ -143,7 +142,7 @@ class APIRequester:
 					raceLaps[driver["driverId"]].append(get_sec(driver["time"]))
 				#raceLaps = np.array([get_sec(lap["Timings"][0]["time"]) for lap in race["Laps"]])
 
-			#Index of race is same index in raceNames
+			#Index of race is same index as in raceNames
 			lapTimeData[raceN] = raceLaps
 			raceNames.append(race["raceName"]) 
 
