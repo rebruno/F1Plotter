@@ -114,7 +114,7 @@ class APIRequester:
 					return race["raceName"]
 
 		#Else, run a request for it. 
-		self.reset_variables()
+
 		self.criteria = "results"
 		self.race(season, round_number)
 
@@ -200,7 +200,6 @@ class APIRequester:
 
 		"""
 
-		self.reset_variables()
 		self.criteria = "qualifying"
 
 		if self.params["limits"]["limit"] == None:
