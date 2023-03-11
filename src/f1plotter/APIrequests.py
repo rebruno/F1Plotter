@@ -61,7 +61,7 @@ class APIRequester:
 				"grid":			None,
 				"qualifying":	None,
 				"sprint":		None,
-				"result":		None,
+				"results":		None,
 				"status":		None,
 				"standing":		None,
 				"races":		None,
@@ -224,6 +224,33 @@ class APIRequester:
 
 		self.reset_params()
 		return qualifyingData
+
+	def get_results(self):
+		self.criteria = "results"
+
+		self.limit(20)
+
+		reqJSON = self.run_request()
+
+		resultData = {}
+
+		for raceN, race in enumerate(reqJSON["MRData"]["RaceTable"]["Races"]):
+			resultPositions = {}
+
+			for driver in race["Results"]:
+				resultPositions[driver["Driver"]["driverId"]] = {
+					"position": int(driver["position"]),
+					"Constructor": driver["Constructor"]["constructorId"],
+					"grid": int(driver["grid"]),
+					"status": driver["status"]
+				}
+
+			resultData[raceN] = resultPositions
+
+		self.reset_params()
+		return resultData
+
+
 
 	def search_id(self, name):
 		"""

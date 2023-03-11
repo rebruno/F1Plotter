@@ -55,3 +55,18 @@ class DataFormatter:
 		self.requester.race(*raceID[0:2])
 		drivers = self.requester.get_drivers()
 		return list(drivers.keys())
+
+	def get_teams(self, raceID):
+		self.requester.race(*raceID[0:2])
+		resultData = self.requester.get_results()[0]
+
+		teams = {}
+
+		for driver in resultData:
+			if resultData[driver]["Constructor"] not in teams:
+				teams[resultData[driver]["Constructor"]] = [driver]
+			else:
+				teams[resultData[driver]["Constructor"]].append(driver)
+
+		return teams
+
