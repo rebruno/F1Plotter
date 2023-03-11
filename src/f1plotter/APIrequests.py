@@ -24,16 +24,17 @@ class APIRequester:
 	"""
 
 	def __init__(self):
-		self.raceNames = None
-		self.reqJSON = None
+		self.lastURLRequest = None #Kind of used as a caching. Since the results are cached, accessing this is pretty fast and useful for stuff like getting the racename
 
 		self.reset_params()
 
-	def get_request(self, url):
+	def get_request(self, url : str):
 		"""
 		Tries to load JSON content. 
 		If the limit is less than the total, then a 2nd request is done to get all the data to avoid further calls
 		"""
+		self.lastURLRequest = url
+
 		getRequest = req.get(url)
 		getRequest.raise_for_status() #If a 400+ code is returned, an error is raised
 
@@ -43,15 +44,9 @@ class APIRequester:
 			self.params["limits"]["limit"] = int(getJSON["MRData"]["total"])
 			return self.run_request()
 
-		return getJSON
 
-	def reset_variables(self):
-		"""
-		Used to reset variables, should call it in between every seperate use
-		Called everytime get_STATISTIC() is called
-		"""
-		self.raceNames = None
-		self.reqJSON = None
+
+		return getJSON
 
 	def reset_params(self):
 		self.criteria = None
@@ -97,8 +92,6 @@ class APIRequester:
 		Generally this is the lowercase of their family name, but in the case of drivers that share their family name
 		(e.g. Michael and Ralf Schumacher), their first name is prepended. 
 
-		TODO: search_driver(givenName, familyName) can also be used to find the driverID, which will return a list of driverIDs
-		that fit the given and family name.
 		"""
 		self.params["qualifiers"]["drivers"] = driverID
 		return self
@@ -107,32 +100,55 @@ class APIRequester:
 		self.params["qualifiers"]["laps"] = lapN
 		return self
 
-	def limit(self, L : int):
+	def limit(self, L):
 		self.params["limits"]["limit"] = L
+
+
+	def get_racename(self, season, round_number):
+		#Check if last request matches (season,round_number) since it is likely that the last request
+		#Was for the same race
+		reqJSON = self.get_request(self.lastURLRequest)["MRData"]["RaceTable"]
+		if int(reqJSON["season"]) == season:
+			for race in reqJSON["Races"]:
+				if int(race["round"]) == round_number:
+					return race["raceName"]
+
+		#Else, run a request for it. 
+		self.reset_variables()
+		self.criteria = "results"
+		self.race(season, round_number)
+
+		reqJSON = self.run_request()
+
+		if len(reqJSON["MRData"]["RaceTable"]["Races"]) == 0:
+			print("Error in getting race name.")
+			return ""
+		
+		return reqJSON["MRData"]["RaceTable"]["Races"][0]["raceName"]
+
+
 
 	def get_laps(self):
 		"""
 		Returns a dictionary in the format of {driverid:[laptime1, laptime2, ..., ]}
 		where driverid is a valid driverid and laptimeX is the laptime for lap X in seconds. 
 		"""
-		self.reset_variables()
 
 		self.criteria = "laps"
 		
 		if self.params["limits"]["limit"] == None:
 			self.limit(87) #
 
-		self.reqJSON = self.run_request()
+		reqJSON = self.run_request()
 
-		if len(self.reqJSON["MRData"]["RaceTable"]["Races"]) == 0:
+		if len(reqJSON["MRData"]["RaceTable"]["Races"]) == 0:
 			print("Error in getting laps.")
 			return []
 
 
 		lapTimeData = {}
-		raceNames = []
 
-		for raceN,race in enumerate(self.reqJSON["MRData"]["RaceTable"]["Races"]):
+		for raceN,race in enumerate(reqJSON["MRData"]["RaceTable"]["Races"]):
 			raceLaps = {}
 			for driver in race["Laps"][0]["Timings"]:
 				raceLaps[driver["driverId"]] = []
@@ -140,13 +156,8 @@ class APIRequester:
 			for lap in race["Laps"]:
 				for driver in lap["Timings"]:
 					raceLaps[driver["driverId"]].append(get_sec(driver["time"]))
-				#raceLaps = np.array([get_sec(lap["Timings"][0]["time"]) for lap in race["Laps"]])
 
-			#Index of race is same index as in raceNames
 			lapTimeData[raceN] = raceLaps
-			raceNames.append(race["raceName"]) 
-
-		self.raceNames = raceNames
 
 		self.reset_params()
 		return lapTimeData
@@ -167,17 +178,15 @@ class APIRequester:
 			}
 		}
 		"""
-		self.reset_variables()
 
 		self.criteria = "drivers"
 		if self.params["limits"]["limit"] == None:
 			self.limit(34) #
 
-		self.reqJSON = self.run_request()
+		reqJSON = self.run_request()
 
 		driverData = {}
-
-		for driverN, driver in enumerate(self.reqJSON["MRData"]["DriverTable"]["Drivers"]):
+		for driverN, driver in enumerate(reqJSON["MRData"]["DriverTable"]["Drivers"]):
 			driverID = driver["driverId"]
 			driverData[driverID] = driver
 
@@ -197,11 +206,11 @@ class APIRequester:
 		if self.params["limits"]["limit"] == None:
 			self.limit(20)
 
-		self.reqJSON = self.run_request()
+		reqJSON = self.run_request()
 
 		qualifyingData = {}
 
-		for qualiN, quali in enumerate(self.reqJSON["MRData"]["RaceTable"]["Races"]):
+		for qualiN, quali in enumerate(reqJSON["MRData"]["RaceTable"]["Races"]):
 			qualifyingTimes = {}
 
 			for driver in quali["QualifyingResults"]:
@@ -238,7 +247,7 @@ class APIRequester:
 
 	def run_request(self):
 		reqURL = self.create_url(self.params, self.criteria)
-		print("ReqURL is {}".format(reqURL))
+		print("Request URL is {}".format(reqURL))
 		return self.get_request(reqURL)
 
 	def create_url(self, params, criteria):
@@ -265,7 +274,7 @@ class APIRequester:
 		This would be generated by calling get_lap_param(season, round, driver, lap)
 		Criteria = "lap"
 		"""
-		#Laps
+		
 		reqURL = URLBuilder()
 		param_keys = params.keys()
 
@@ -273,6 +282,7 @@ class APIRequester:
 
 		if criteria == None:
 			raise Exception("Criteria must be defined")
+
 		if params["race"]["season"] != None:
 			reqURL.append(params["race"]["season"])
 			if params["race"]["round"] != None: 
@@ -296,9 +306,6 @@ class APIRequester:
 class URLBuilder:
 	baseURL = "https://ergast.com/api/f1" 
 
-	def __init__(self):
-		pass
-
 	def reset(self):
 		self.baseURL = "https://ergast.com/api/f1/" 
 
@@ -318,3 +325,6 @@ class URLBuilder:
 			self.baseURL += f"?limit={limitParams['limit']}"
 		if limitParams["offset"] != None:
 			self.baseURL += f"?limit={limitParams['offset']}"
+
+
+
