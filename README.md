@@ -1,4 +1,4 @@
 # F1Plotter
- Python code to call from Ergast API and then plot various information
+ Python module to call from Ergast API, with a class to plot stuff
 
- Dependencies: requests, matplotlib
+ Dependencies: requests, requests_cache, matplotlib
