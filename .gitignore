@@ -3,3 +3,9 @@
 *.sqlite
 test.py
 *.sublime-workspace
+/backup_data
+*.bat
+!install.bat
+/test_environment
+/src/f1plotter.egg-info
+/dist
