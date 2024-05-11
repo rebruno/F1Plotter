@@ -1,7 +1,7 @@
 # F1Plotter
 Python module to call from Ergast API, with plotting capabilities.
 
-##Installation: 
+## Installation: 
 Run 
 ``` 
 python -m build
@@ -11,7 +11,7 @@ in the same directory as ```pyproject.toml```.
 The library can then be used through ```import f1plotter```.
 
 
-##Classes
+## Classes
 ### APIRequester
 Currently supports getting race names, results, driver, qualifying and lap information.<br>
 Any call must have the race specified. An example of using follows, where get_laps() can also be any other _get_ function.<br>
