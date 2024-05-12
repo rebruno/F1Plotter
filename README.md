@@ -5,7 +5,7 @@ Python module to call from Ergast API, with plotting capabilities.
 Run 
 ``` 
 python -m build
-pip install --find-links install dist\f1plotter-0.0.1-py3-none-any.whl
+pip install --find-links install dist/f1plotter-0.0.1-py3-none-any.whl
 ``` 
 in the same directory as ```pyproject.toml```.
 The library can then be used through ```import f1plotter```.
