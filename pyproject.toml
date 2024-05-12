@@ -10,7 +10,7 @@ description = "A Python package to create plots for Formula One races, using Mat
 readme = "README.md"
 requires-python = ">=3.8.5"
 
-dependencies = ["requests-cache>=0.9.6", "matplotlib>=3.4.1"]
+dependencies = ["requests-cache>=0.9.6", "matplotlib>=3.4.1", "requests>=2.25.1"]
 
 classifiers = ["Programming Language :: Python :: 3"]
 
