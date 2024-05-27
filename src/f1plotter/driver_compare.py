@@ -1,10 +1,10 @@
 from .query import *
-from .methods import *
+from .helper_methods import *
 
 import numpy as np
 
 
-def lap_comparison(raceID, driverIDList, n = 25, percent = 1, startLap = 0, endLap = None):
+def lap_comparison(season, round_number, driverIDList, n = 25, percent = 1, startLap = 0, endLap = None):
     """
     Takes a list of driverIDs and a raceID.
     Compares the lap averages(up to n fastest laps) between drivers.
@@ -15,7 +15,7 @@ def lap_comparison(raceID, driverIDList, n = 25, percent = 1, startLap = 0, endL
     if len(driverIDList) == 0:
         return {}
 
-    driverLaps = ErgastQuery().get_laps(raceID, driverIDList)
+    driverLaps = ErgastQuery().get_laps(season, round_number, driverIDList)
     if len(driverLaps) == 0:
         return {}
 
@@ -34,13 +34,13 @@ def lap_comparison(raceID, driverIDList, n = 25, percent = 1, startLap = 0, endL
 
     return driverGaps
 
-def team_lap_comparison(raceID, teamIDList, n=25, percent=1, startLap = 0, endLap = None):
+def team_lap_comparison(season, round_number, teamIDList, n=25, percent=1, startLap = 0, endLap = None):
     """
     Same as lap_comparison but between teammates
     """
     teamGaps = {}
     for team in teamIDList:
-        driverGaps = lap_comparison(raceID, teamIDList[team], n, percent, startLap, endLap)
+        driverGaps = lap_comparison(season, round_number, teamIDList[team], n, percent, startLap, endLap)
         teamGaps[team] = driverGaps
 
     return teamGaps

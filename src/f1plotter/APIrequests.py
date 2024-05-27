@@ -4,7 +4,7 @@ import requests_cache as cache
 
 import re
 
-from .methods import *
+from .helper_methods import *
 
 #requests_cache, used for caching requests. Will be replaced later but it works for now
 cache.install_cache()

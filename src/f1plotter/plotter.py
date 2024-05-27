@@ -9,10 +9,8 @@ from io import BytesIO
 class Plotter():
     def __init__(self, dataquery):
         """
-        dataquery is a class that queries Ergast's API and formats the data for this plotter
-            
+        dataquery is a class that queries Ergast's API and formats the data for this plotter           
         """
-
         self.dataquery = dataquery
 
     def get_plot(self):
@@ -45,7 +43,6 @@ class Plotter():
 
         laptimesAxe.set_xlabel("Lap number")
         laptimesAxe.set_ylabel("Lap times [s]")
-        
     
         laptimesAxe.set_title("{}".format(data.get_racename(raceID)))
 
