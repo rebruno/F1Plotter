@@ -44,15 +44,4 @@ fig, axe = plotter.head_to_head_laptime(
 					driverIDList = driverIDList, 
 					startLap = 0, endLap = None)
 plt.show()
-
-
-plotter = Plotter(DataFormatter())
-driverIDList = ["max_verstappen", "leclerc", "perez"]
-season = 2023
-race = 1
-fig, axe = plotter.head_to_head_laptime(raceID = (season, race), 
-					driverIDList = driverIDList, 
-					startLap = 0, endLap = None)
-plt.show()
-
 ```
