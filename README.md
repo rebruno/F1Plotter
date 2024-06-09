@@ -12,12 +12,11 @@ The library can then be used through ```import f1plotter```.
 
 ## Testing
 Tests are in the ```tests``` folder. Compatible with Python's unittest framework and pytest.
-```pytest tests```
 
 ## Classes
 ### APIRequester
 Currently supports getting race names, results, driver, qualifying and lap information.<br>
-Any call must have the race specified. An example of using follows, where get_laps() can also be any other _get_ function.<br>
+Any call must have the race specified by season and race number.<br>
 ``` 
 from f1plotter.query import ErgastQuery
 
