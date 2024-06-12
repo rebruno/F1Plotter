@@ -2,6 +2,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 import warnings
 
+from .helper_methods import get_driver_color
+
+
 import base64
 from io import BytesIO
 
@@ -35,7 +38,7 @@ class Plotter():
 
         fig, laptimesAxe = self.get_plot()
         data = self.dataquery 
-        lapTimeData = data.get_laps(raceID, driverIDList, startLap = startLap, endLap = endLap)
+        lapTimeData = data.get_laps(*raceID, driverIDList, startLap = startLap, endLap = endLap)
 
 
         for driver in driverIDList:
@@ -44,8 +47,7 @@ class Plotter():
         laptimesAxe.set_xlabel("Lap number")
         laptimesAxe.set_ylabel("Lap times [s]")
     
-        laptimesAxe.set_title("{}".format(data.get_racename(raceID)))
-
+        laptimesAxe.set_title("{} {}".format(raceID[0], data.get_racename(raceID)))
         x_min, x_max = laptimesAxe.get_xlim()
         laptimesAxe.set_xticks([i for i in range(round(x_min), round(x_max), 5)])
                
@@ -54,8 +56,53 @@ class Plotter():
         return fig, laptimesAxe
 
     
-    def boxplot(raceID, driverIDList, startLap = 0, endLap = None, exclude = -1, scatter = True):
-        pass
+    def boxplot(self, raceID, driverIDList, startLap = 0, endLap = None, exclude = -1, scatter = True):
+        """
+        Creates a boxplot of laptimes for drivers provided at a race.
+
+        raceID is a (season, raceNumber) tuple
+
+        Exclude is used to remove slow laps, like those during a safety car or during a pitstop. 
+        A good value is 1.05.
+
+        """
+        fig, ax = self.get_plot()
+
+        position = 1
+        data = self.dataquery
+        lapTimeData = data.get_laps(*raceID, driverIDList, startLap = startLap, endLap = endLap)
+
+        processedData = {}
+
+        for driver in driverIDList:
+            if driver not in lapTimeData:
+                print("Driver {} has no laps. Check driverID or if the driver started the Grand Prix.".format(driver))
+                continue
+            
+            driverLaps = np.array(lapTimeData[driver]["laptime"])
+            if exclude > 0:
+                b = driverLaps < np.median(driverLaps) * exclude
+                driverLaps = driverLaps[b]
+            
+            processedData[driver] = driverLaps
+            if scatter:
+                c = get_driver_color(driver)
+                x = np.random.normal(position, 0.04, size=len(driverLaps))
+                ax.scatter(x, driverLaps, color=c, alpha=0.3, label=driver)
+
+            position += 1
+
+
+
+        ax.boxplot(x=processedData.values(), labels=processedData.keys())
+        
+        ax.set_title("{} {}".format(raceID[0], data.get_racename(raceID)))
+        ax.set_xlabel("Drivers")
+        ax.set_ylabel("Lap times[s]")
+        ax.legend(loc="upper right")
+        ax.grid(linestyle="--", linewidth=0.5)
+        return fig, ax
+
 
 
     def show(self):

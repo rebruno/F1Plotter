@@ -80,7 +80,6 @@ class APIRequester:
         Can either specify a season(don't pass an argument for roundN) or a specific race from a season.
         This must be set before using methods like get_laps(), get_drivers(), etc... that depend on a specific race.
         Both are integers, and must be valid(season is a year, roundN must be one of the rounds for a season)
-        A simple way to find out the (season, roundN) needed is to check the Wikipedia article for a given season.
 
         """
         self.params["race"]["season"] = season
