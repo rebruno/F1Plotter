@@ -9,3 +9,4 @@ test.py
 /test_environment
 /src/f1plotter.egg-info
 /dist
+/.venv
